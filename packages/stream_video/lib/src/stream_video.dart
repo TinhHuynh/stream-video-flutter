@@ -288,6 +288,24 @@ class StreamVideo {
     });
   }
 
+  //// Dispose the client
+  Future<Result<None>> dispose() async {
+    _logger.i(() => '[dispose] currentUser.id: ${_state.currentUser.id}');
+    try {
+      await _client.disconnectUser();
+      _subscriptions.cancelAll();
+      await pushNotificationManager?.dispose();
+      // Resetting the state.
+      await _state.clear();
+      _connectionState = ConnectionState.disconnected(_state.currentUser.id);
+      _logger.v(() => '[dispose] completed');
+      return const Result.success(none);
+    } catch (e, stk) {
+      _logger.e(() => '[dispose] failed: $e');
+      return Result.failure(VideoErrors.compose(e, stk));
+    }
+  }
+
   Future<Result<UserToken>> _connect({
     bool includeUserDetails = false,
   }) async {
